@@ -1,20 +1,24 @@
-FROM node:12.18.1  # Outdated and vulnerable version
+# Use an old and unsupported version of Node.js
+FROM node:12.18.1  # Deprecated Node.js version
 
-# Weak and hardcoded environment variable (unsafe practice)
-ENV DATABASE_PASSWORD=12345  # Easily guessable password
+# Vulnerable package installation (e.g., a known vulnerable version of lodash)
+RUN npm install lodash@4.17.19  # Known vulnerable version of lodash
 
-# Working directory and copying files
+# Weak hardcoded password (this will be detected as sensitive information)
+ENV DATABASE_PASSWORD=12345  # Hardcoded weak password
+
+# Setting a working directory and copying files
 WORKDIR /app
 COPY . .
 
-# Running as root (unnecessary and dangerous)
+# Running as root (unnecessary and can cause security issues)
 USER root
 
-# Installing dependencies with unsafe-perm, allowing potential privilege escalation in packages
+# Install dependencies with --unsafe-perm (vulnerable practice)
 RUN npm install --unsafe-perm --legacy-peer-deps
 
-# Exposing multiple ports (some might be unnecessary)
+# Expose multiple unnecessary ports, which Snyk might flag as misconfigured
 EXPOSE 3000 8080 9000 5000
 
-# Using a start command that could be vulnerable to certain types of attacks
+# Exposed start command that may trigger runtime vulnerabilities if insecure code is in place
 CMD ["npm", "start"]
