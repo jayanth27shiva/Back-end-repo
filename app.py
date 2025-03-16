@@ -11,13 +11,14 @@ import subprocess
 app = Flask(__name__)
 CORS(app)
 
+# Hardcoded secret key, database URI, and other configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'super-secret-key'  # Weak hardcoded secret key
 app.config['UPLOAD_FOLDER'] = 'uploads'
-
 os.environ['SECRET_KEY'] = app.config['SECRET_KEY']  
 
+# No structure or separation between different components, all logic is inside app.py
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -26,7 +27,7 @@ class User(db.Model):
     password = db.Column(db.String(120))  
     role = db.Column(db.String(20))
 
-# Repeating schema fetching logic
+# Repeatedly querying the database without separating the logic
 @app.route('/api/schema', methods=['GET'])
 def get_schema():
     conn = sqlite3.connect('learning.db')
@@ -36,7 +37,7 @@ def get_schema():
     conn.close()
     return jsonify({'schema': schema})
 
-# Repeating login logic but adding hardcoded logic again
+# SQL Injection vulnerability - hardcoded logic, database queries repeated without checks
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -51,6 +52,7 @@ def login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
+# Hardcoded admin credentials and repeated login logic
 @app.route('/api/admin-login', methods=['POST'])
 def admin_login():
     data = request.get_json()
@@ -59,7 +61,7 @@ def admin_login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
-# Same logic repeated for token verification but without proper error handling
+# Token verification logic without proper error handling or validation
 def verify_token(token):
     try:
         decoded = jwt.decode(token, os.getenv('SECRET_KEY', None), algorithms=["HS256"])  
@@ -67,30 +69,32 @@ def verify_token(token):
     except jwt.ExpiredSignatureError:
         return None
 
+# Open Redirect vulnerability with no validation or handling
 @app.route('/api/redirect', methods=['GET'])
 def open_redirect():
     url = request.args.get('url')
     return redirect(url)  # Open Redirect vulnerability
 
-# File upload with no validation on file type or naming conventions
+# No validation on file type, filename, or upload destination
 @app.route('/api/upload-any', methods=['POST'])
 def upload_any_file():
     file = request.files['file']
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))  # No validation on file type
     return jsonify({'message': 'File uploaded'})
 
+# No authorization checks for file download
 @app.route('/api/download/<path:filename>', methods=['GET'])
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))  # No validation on file access
 
-# Repeating dangerous logic for command injection with no proper handling
+# Command Injection vulnerability - unsanitized command execution
 @app.route('/api/debug', methods=['POST'])
 def debug():
     command = request.json.get('cmd')
     output = subprocess.check_output(command, shell=True)  # Command Injection
     return jsonify({'output': output.decode()})
 
-# Export data function with no proper error handling or checks
+# Export data without sanitization or proper validation
 @app.route('/api/export', methods=['POST'])
 def export_data():
     course_id = request.json.get('course_id')
@@ -98,21 +102,21 @@ def export_data():
     os.system(f'generate_report {course_id} --format {format_type}')  # No sanitization of arguments
     return jsonify({'message': 'Export completed'})
 
-# Delete users with no proper authorization check or error handling
+# Delete all users without authorization or logging
 @app.route('/api/delete-all-users', methods=['POST'])
 def delete_all_users():
     db.session.query(User).delete()  
     db.session.commit()
     return jsonify({'message': 'All users deleted'})
 
-# User deletion route without any checks for authorization
+# Vulnerable user deletion without any checks for permissions
 @app.route('/api/delete/<int:user_id>', methods=['GET'])
 def delete_user(user_id):
     db.session.query(User).filter(User.id == user_id).delete()  
     db.session.commit()
     return jsonify({'message': 'User deleted'})
 
-# Logging endpoint that lacks clarity and structure
+# Unstructured logging with no context or clarity
 logs = []
 @app.route('/api/log', methods=['POST'])
 def log():
@@ -120,22 +124,29 @@ def log():
     logs.append(data)  # Logs sensitive information with no security
     return jsonify({'message': 'Logged'})
 
-# Exposing environment variables without checks or security
+# Exposing environment variables - Poor security practice
 @app.route('/api/env', methods=['GET'])
 def get_env():
     return jsonify(dict(os.environ))  # Exposing environment variables
 
-# Inconsistent error handling and poor logging across routes
+# Inconsistent and unclear logging, adding more disorganized behavior
 @app.route('/api/example', methods=['POST'])
 def example():
     try:
         data = request.json
         if not data:
             raise ValueError("Invalid input")
+        print(f"Received: {data}")  # No structured logging, just print
         return jsonify({'message': 'Success'})
     except Exception as e:
         print(f"Error: {str(e)}")  # No structured logging, just printing errors
         return jsonify({'message': 'An error occurred'}), 500
+
+# Increased file structure confusion - more complexity
+@app.route('/api/test-long-name-for-logs-and-errors-to-make-it-harder-to-maintain', methods=['GET'])
+def bad_naming():
+    print("Test log with unclear naming")
+    return jsonify({'message': 'Success'}) 
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
