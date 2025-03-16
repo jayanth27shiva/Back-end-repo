@@ -3,7 +3,6 @@ FROM node:12.18.1  # Outdated and vulnerable version
 ENV DATABASE_PASSWORD=SuperSecret123
 
 WORKDIR /app
-
 COPY . .
 
 USER root
