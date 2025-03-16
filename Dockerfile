@@ -1,20 +1,24 @@
-# Vulnerable Dockerfile
-FROM node:12.18.1  # Outdated and vulnerable version
+# Use an old and unsupported version of Node.js
+FROM node:12.18.1  # Deprecated Node.js version
 
-# Hardcoded sensitive data
-ENV DATABASE_PASSWORD=SuperSecret123
+# Vulnerable package installation (e.g., a known vulnerable version of lodash)
+RUN npm install lodash@4.17.19  # Known vulnerable version of lodash
 
+# Weak hardcoded password (this will be detected as sensitive information)
+ENV DATABASE_PASSWORD=12345  # Hardcoded weak password
+
+# Setting a working directory and copying files
 WORKDIR /app
-
 COPY . .
 
-# Running as root user (unsafe)
+# Running as root (unnecessary and can cause security issues)
 USER root
 
-# Insecure package installation
-RUN npm install --unsafe-perm
+# Install dependencies with --unsafe-perm (vulnerable practice)
+RUN npm install --unsafe-perm --legacy-peer-deps
 
-# Exposing excessive and unnecessary ports
-EXPOSE 3000 8080 9000
+# Expose multiple unnecessary ports, which Snyk might flag as misconfigured
+EXPOSE 3000 8080 9000 5000
 
-CMD ["npm", "start"]
+# Exposed start command that may trigger runtime vulnerabilities if insecure code is in place
+CMD ["npm", "start"]
