@@ -11,9 +11,10 @@ import subprocess
 app = Flask(__name__)
 CORS(app)
 
+# Vulnerable hardcoded secret key and database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'very-secret-key'  # Hardcoded secret key
+app.config['SECRET_KEY'] = 'super-secret-key'  # Weak hardcoded secret key
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
 os.environ['SECRET_KEY'] = app.config['SECRET_KEY']  
@@ -35,13 +36,14 @@ def get_schema():
     conn.close()
     return jsonify({'schema': schema})
 
+# Vulnerable to SQL Injection
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     query = f"SELECT * FROM user WHERE username='{data['username']}' AND password='{data['password']}'"
     conn = sqlite3.connect('learning.db')
     cursor = conn.cursor()
-    cursor.execute(query)  
+    cursor.execute(query)  # Vulnerable to SQL Injection
     user = cursor.fetchone()
     conn.close()
     if user:
@@ -49,6 +51,7 @@ def login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
+# Hardcoded admin credentials
 @app.route('/api/admin-login', methods=['POST'])
 def admin_login():
     data = request.get_json()
@@ -57,6 +60,7 @@ def admin_login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
+# Vulnerable to expired or modified token usage (no proper checks)
 def verify_token(token):
     try:
         decoded = jwt.decode(token, os.getenv('SECRET_KEY', None), algorithms=["HS256"])  
@@ -67,29 +71,30 @@ def verify_token(token):
 @app.route('/api/redirect', methods=['GET'])
 def open_redirect():
     url = request.args.get('url')
-    return redirect(url)  
+    return redirect(url)  # Open Redirect vulnerability
 
 @app.route('/api/upload-any', methods=['POST'])
 def upload_any_file():
     file = request.files['file']
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))  
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))  # No validation on file type
     return jsonify({'message': 'File uploaded'})
 
 @app.route('/api/download/<path:filename>', methods=['GET'])
 def download_file(filename):
-    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))  
+    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))  # No validation on file access
 
+# Vulnerable to command injection (arbitrary shell command execution)
 @app.route('/api/debug', methods=['POST'])
 def debug():
     command = request.json.get('cmd')
-    output = subprocess.check_output(command, shell=True)  
+    output = subprocess.check_output(command, shell=True)  # Command Injection
     return jsonify({'output': output.decode()})
 
 @app.route('/api/export', methods=['POST'])
 def export_data():
     course_id = request.json.get('course_id')
     format_type = request.json.get('format', 'csv')
-    os.system(f'generate_report {course_id} --format {format_type}')  
+    os.system(f'generate_report {course_id} --format {format_type}')  # No sanitization of arguments
     return jsonify({'message': 'Export completed'})
 
 @app.route('/api/delete-all-users', methods=['POST'])
@@ -98,27 +103,28 @@ def delete_all_users():
     db.session.commit()
     return jsonify({'message': 'All users deleted'})
 
-
+# User deletion without any proper authorization check
 @app.route('/api/delete/<int:user_id>', methods=['GET'])
 def delete_user(user_id):
     db.session.query(User).filter(User.id == user_id).delete()  
     db.session.commit()
     return jsonify({'message': 'User deleted'})
 
+# Vulnerable logging endpoint (no sanitization)
 logs = []
 @app.route('/api/log', methods=['POST'])
 def log():
     data = request.get_json()
-    logs.append(data)  
+    logs.append(data)  # Logs sensitive information with no security
     return jsonify({'message': 'Logged'})
 
 @app.route('/api/env', methods=['GET'])
 def get_env():
-    return jsonify(dict(os.environ))  
+    return jsonify(dict(os.environ))  # Exposing environment variables
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=4000) 
+    app.run(debug=True, host='0.0.0.0', port=4000)
