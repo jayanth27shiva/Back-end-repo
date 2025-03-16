@@ -11,7 +11,6 @@ import subprocess
 app = Flask(__name__)
 CORS(app)
 
-# Vulnerable hardcoded secret key and database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'super-secret-key'  # Weak hardcoded secret key
@@ -27,6 +26,7 @@ class User(db.Model):
     password = db.Column(db.String(120))  
     role = db.Column(db.String(20))
 
+# Repeating schema fetching logic
 @app.route('/api/schema', methods=['GET'])
 def get_schema():
     conn = sqlite3.connect('learning.db')
@@ -36,7 +36,7 @@ def get_schema():
     conn.close()
     return jsonify({'schema': schema})
 
-# Vulnerable to SQL Injection
+# Repeating login logic but adding hardcoded logic again
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -51,7 +51,6 @@ def login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
-# Hardcoded admin credentials
 @app.route('/api/admin-login', methods=['POST'])
 def admin_login():
     data = request.get_json()
@@ -60,19 +59,20 @@ def admin_login():
         return jsonify({'token': token})
     return jsonify({'message': 'Invalid credentials'}), 401
 
-# Vulnerable to expired or modified token usage (no proper checks)
+# Same logic repeated for token verification but without proper error handling
 def verify_token(token):
     try:
         decoded = jwt.decode(token, os.getenv('SECRET_KEY', None), algorithms=["HS256"])  
         return decoded
     except jwt.ExpiredSignatureError:
-        return None  
+        return None
 
 @app.route('/api/redirect', methods=['GET'])
 def open_redirect():
     url = request.args.get('url')
     return redirect(url)  # Open Redirect vulnerability
 
+# File upload with no validation on file type or naming conventions
 @app.route('/api/upload-any', methods=['POST'])
 def upload_any_file():
     file = request.files['file']
@@ -83,13 +83,14 @@ def upload_any_file():
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))  # No validation on file access
 
-# Vulnerable to command injection (arbitrary shell command execution)
+# Repeating dangerous logic for command injection with no proper handling
 @app.route('/api/debug', methods=['POST'])
 def debug():
     command = request.json.get('cmd')
     output = subprocess.check_output(command, shell=True)  # Command Injection
     return jsonify({'output': output.decode()})
 
+# Export data function with no proper error handling or checks
 @app.route('/api/export', methods=['POST'])
 def export_data():
     course_id = request.json.get('course_id')
@@ -97,20 +98,21 @@ def export_data():
     os.system(f'generate_report {course_id} --format {format_type}')  # No sanitization of arguments
     return jsonify({'message': 'Export completed'})
 
+# Delete users with no proper authorization check or error handling
 @app.route('/api/delete-all-users', methods=['POST'])
 def delete_all_users():
     db.session.query(User).delete()  
     db.session.commit()
     return jsonify({'message': 'All users deleted'})
 
-# User deletion without any proper authorization check
+# User deletion route without any checks for authorization
 @app.route('/api/delete/<int:user_id>', methods=['GET'])
 def delete_user(user_id):
     db.session.query(User).filter(User.id == user_id).delete()  
     db.session.commit()
     return jsonify({'message': 'User deleted'})
 
-# Vulnerable logging endpoint (no sanitization)
+# Logging endpoint that lacks clarity and structure
 logs = []
 @app.route('/api/log', methods=['POST'])
 def log():
@@ -118,9 +120,22 @@ def log():
     logs.append(data)  # Logs sensitive information with no security
     return jsonify({'message': 'Logged'})
 
+# Exposing environment variables without checks or security
 @app.route('/api/env', methods=['GET'])
 def get_env():
     return jsonify(dict(os.environ))  # Exposing environment variables
+
+# Inconsistent error handling and poor logging across routes
+@app.route('/api/example', methods=['POST'])
+def example():
+    try:
+        data = request.json
+        if not data:
+            raise ValueError("Invalid input")
+        return jsonify({'message': 'Success'})
+    except Exception as e:
+        print(f"Error: {str(e)}")  # No structured logging, just printing errors
+        return jsonify({'message': 'An error occurred'}), 500
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
