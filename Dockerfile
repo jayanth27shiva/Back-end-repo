@@ -1,11 +1,15 @@
-FROM python:3.10-slim
+FROM node:12.18.1  # Outdated and vulnerable version
+
+ENV DATABASE_PASSWORD=SuperSecret123
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
 
-EXPOSE 4000
-CMD ["python", "app.py"]
+USER root
+
+RUN npm install --unsafe-perm
+
+EXPOSE 3000 8080 9000
+
+CMD ["npm", "start"]
