@@ -74,6 +74,26 @@ env:
   SERVER_USER: ${{ secrets.SERVER_USER }}
 
 jobs:
+  sonarQubeScan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./Back-end-repo  # Correct path to your repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        with:
+          args: >
+            -Dsonar.projectKey=ACTUAL_PROJECT_KEY
+            -Dsonar.organization=ACTUAL_ORGANIZATION
+            -Dsonar.python.coverage.reportPaths=backend-flask/coverage.xml
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build-and-test:
     runs-on: ubuntu-latest
 
@@ -108,23 +128,11 @@ jobs:
     - name: Run Tests and Generate Coverage Report
       run: |
         pytest --cov=./ --cov-report=xml
-
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v5.0.0
-      with:
-        args: >
-          -Dsonar.projectKey=ACTUAL_PROJECT_KEY
-          -Dsonar.organization=ACTUAL_ORGANIZATION
-          -Dsonar.python.coverage.reportPaths=backend-flask/coverage.xml
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-
     - name: Cache SonarScanner CLI
       uses: actions/cache@v4
       with:
-        path: /home/runner/work/_temp/sonar-scanner-cli-7.0.2.4839-Linux-X64
-        key: sonar-scanner-cli-7.0.2.4839-Linux-X64
+          path: /home/runner/work/_temp/sonar-scanner-cli-7.0.2.4839-Linux-X64
+          key: sonar-scanner-cli-7.0.2.4839-Linux-X64
 
 
   build-and-push:
@@ -152,7 +160,7 @@ jobs:
         tags: |
           ${{ env.DOCKER_IMAGE }}:latest
           ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-
+  
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
