@@ -11,6 +11,24 @@ import subprocess
 app = Flask(__name__)
 CORS(app)
 
+# app = Flask(__name__)
+
+def init_db():
+    conn = sqlite3.connect('learning.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Define routes here if any
+
 # Hardcoded secret key, database URI, and other configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
