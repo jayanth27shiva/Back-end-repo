@@ -109,14 +109,13 @@ jobs:
       run: |
         pytest --cov=./ --cov-report=xml
 
-    - name: Run SonarQube Scan
+    - name: SonarQube Scan
       uses: SonarSource/sonarqube-scan-action@v5.0.0
       with:
         args: >
           -Dsonar.projectKey=ACTUAL_PROJECT_KEY
           -Dsonar.organization=ACTUAL_ORGANIZATION
           -Dsonar.python.coverage.reportPaths=backend-flask/coverage.xml
-          -Dsonar.projectBaseDir=Back-end-repo
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
