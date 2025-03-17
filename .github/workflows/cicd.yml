@@ -63,30 +63,29 @@ name: Backend CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'  # Adjust based on your backend's Python version
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend-flask/requirements.txt
 
-      - name: Run tests
-        run: npm test
-
-      - name: Lint code
-        run: npm run lint
+    - name: Run Flask Tests (if any)
+      run: |
+        # You may need to adjust this based on your Flask app/test setup
+        pytest backend-flask/tests  # Assuming tests are in this folder
