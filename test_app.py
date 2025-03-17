@@ -5,13 +5,45 @@ import jwt
 from datetime import datetime, timedelta
 
 import pytest
-from app import app  
+from app import app, init_db
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['DATABASE'] = ':memory:'  # In-memory DB
     with app.test_client() as client:
+        with app.app_context():
+            init_db()
         yield client
+
+def test_home_route(client):
+    response = client.get('/')
+    assert response.status_code == 200
+
+def test_api_route(client):
+    response = client.get('/api')
+    assert response.status_code == 200
+
+def test_register_user(client):
+    response = client.post('/api/register', json={
+        'username': 'newuser',
+        'password': 'newpass',
+        'role': 'student'
+    })
+    assert response.status_code == 200
+
+def test_login_valid_credentials(client):
+    client.post('/api/register', json={
+        'username': 'testuser',
+        'password': 'testpass',
+        'role': 'student'
+    })
+    response = client.post('/api/login', json={
+        'username': 'testuser',
+        'password': 'testpass'
+    })
+    assert response.status_code == 200
+
 
 @pytest.fixture
 def client():
