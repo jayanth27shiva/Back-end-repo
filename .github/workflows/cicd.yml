@@ -110,7 +110,7 @@ jobs:
         pytest --cov=./ --cov-report=xml
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      # uses: SonarSource/sonarcloud-github-action@master
       with:
         args: >
           -Dsonar.projectKey=ACTUAL_PROJECT_KEY
@@ -118,6 +118,13 @@ jobs:
           -Dsonar.python.coverage.reportPaths=coverage.xml
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
+    - name: Cache SonarScanner CLI
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/work/_temp/sonar-scanner-cli-7.0.2.4839-Linux-X64
+        key: sonar-scanner-cli-7.0.2.4839-Linux-X64
+
 
   build-and-push:
     needs: build-and-test
@@ -169,3 +176,4 @@ jobs:
           sudo docker-compose up -d --force-recreate backend
           echo "Backend deployment complete!"
         '
+     
