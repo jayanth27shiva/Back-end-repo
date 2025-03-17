@@ -171,3 +171,8 @@ class Enrollment(db.Model):
 
     user = db.relationship('User', backref=db.backref('enrollments', lazy=True))
     course = db.relationship('Course', backref=db.backref('enrollments', lazy=True))
+
+def get_db():
+    db = sqlite3.connect(app.config['DATABASE'])
+    return db
+
