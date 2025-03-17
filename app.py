@@ -156,5 +156,18 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=4000)
 
 
+    # course = db.relationship('Course', backref='enrollments')
     course = db.relationship('Course', backref='enrollments')
 
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+
+class Enrollment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('enrollments', lazy=True))
+    course = db.relationship('Course', backref=db.backref('enrollments', lazy=True))
