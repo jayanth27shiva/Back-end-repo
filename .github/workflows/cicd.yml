@@ -88,8 +88,8 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         with:
           args: >
-            -Dsonar.projectKey=ACTUAL_PROJECT_KEY
-            -Dsonar.organization=ACTUAL_ORGANIZATION
+            -Dsonar.projectKey=jayanth27shiva_Back-end-repo
+            -Dsonar.organization=jayanth27shiva
             -Dsonar.python.coverage.reportPaths=backend-flask/coverage.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
