@@ -48,7 +48,7 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} '
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             echo "Stopping existing backend container..."
             sudo docker-compose down
             echo "Removing old images..."
@@ -58,5 +58,4 @@ jobs:
             echo "Starting new backend container..."
             sudo docker-compose up -d --force-recreate backend
             echo "Backend deployment complete!"
-          '
-
+          EOF
