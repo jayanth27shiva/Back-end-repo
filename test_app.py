@@ -256,16 +256,17 @@ def client():
 
 @pytest.fixture
 def auth_token():
-    user = User(username='teacher1', password='hashedpass', role='teacher')
-    db.session.add(user)
-    db.session.commit()
-    token = jwt.encode({
-        'user_id': user.id,
-        'username': user.username,
-        'role': user.role,
-        'exp': datetime.utcnow() + timedelta(hours=24)
-    }, app.config['SECRET_KEY'], algorithm='HS256')
-    return token
+    with app.app_context():  # Make sure app is imported or accessible
+        user = User(username='teacher1', password='hashedpass', role='teacher')
+        db.session.add(user)
+        db.session.commit()
+        token = jwt.encode({
+            'user_id': user.id,
+            'username': user.username,
+            'role': user.role,
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return token
 
 
 def test_home_route(client):
