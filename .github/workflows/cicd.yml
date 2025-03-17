@@ -92,18 +92,19 @@ jobs:
     - name: Prepare Database
       run: |
         python -c "
-import sqlite3
-conn = sqlite3.connect('learning.db')
-cursor = conn.cursor()
-cursor.execute('''CREATE TABLE IF NOT EXISTS user (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL,
-                    password TEXT NOT NULL,
-                    role TEXT NOT NULL
-                  )''')
-conn.commit()
-conn.close()
+        import sqlite3
+        conn = sqlite3.connect('learning.db')
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS user (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username TEXT NOT NULL,
+                            password TEXT NOT NULL,
+                            role TEXT NOT NULL
+                          )''')
+        conn.commit()
+        conn.close()
         "
+
 
     - name: Run Tests and Generate Coverage Report
       run: |
