@@ -91,6 +91,8 @@ jobs:
             -Dsonar.projectKey=jayanth27shiva_Back-end-repo
             -Dsonar.organization=jayanth27shiva
             -Dsonar.python.coverage.reportPaths=backend-flask/coverage.xml
+            -Dsonar.projectBaseDir=Back-end-repo
+
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
