@@ -172,23 +172,6 @@ class Enrollment(db.Model):
     user = db.relationship('User', backref=db.backref('enrollments', lazy=True))
     course = db.relationship('Course', backref=db.backref('enrollments', lazy=True))
 
-# app.py
-import sqlite3
-from fastapi import FastAPI  # or Flask, etc.
-
-app = FastAPI()
-
-def init_db():
-    conn = sqlite3.connect('learning.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS user (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT NOT NULL,
-                        password TEXT NOT NULL,
-                        role TEXT NOT NULL
-                      )''')
-    conn.commit()
-    conn.close()
 
 def get_db():
     db = sqlite3.connect(app.config['DATABASE'])
