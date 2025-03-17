@@ -1,6 +1,6 @@
 # Use a more recent but still outdated version of Node.js
-FROM node:14.17.6  # Still outdated but more up-to-date than 12.x
-
+# Still outdated but more up-to-date than 12.x
+FROM node:14.17.6  
 # Install a stable, secure version of lodash
 RUN npm install lodash@4.17.21  # A more recent and secure version of lodash
 
