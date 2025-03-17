@@ -74,7 +74,7 @@ env:
   SERVER_USER: ${{ secrets.SERVER_USER }}
 
 jobs:
-  sonarQubeScan:
+    sonarQubeScan:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -94,6 +94,7 @@ jobs:
             -Dsonar.projectBaseDir=.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
   build-and-test:
     runs-on: ubuntu-latest
@@ -129,11 +130,11 @@ jobs:
     - name: Run Tests and Generate Coverage Report
       run: |
         pytest --cov=./ --cov-report=xml
-    - name: Cache SonarScanner CLI
-      uses: actions/cache@v4
-      with:
-          path: /home/runner/work/_temp/sonar-scanner-cli-7.0.2.4839-Linux-X64
-          key: sonar-scanner-cli-7.0.2.4839-Linux-X64
+    # - name: Cache SonarScanner CLI
+    #   uses: actions/cache@v4
+    #   with:
+    #       path: /home/runner/work/_temp/sonar-scanner-cli-7.0.2.4839-Linux-X64
+    #       key: sonar-scanner-cli-7.0.2.4839-Linux-X64
 
 
   build-and-push:
