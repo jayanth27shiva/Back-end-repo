@@ -67,8 +67,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -83,7 +86,35 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt   
-    - name: Run Flask Tests (if any)
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Prepare Database
       run: |
-        pytest test_app.py    
+        python -c "
+import sqlite3
+conn = sqlite3.connect('learning.db')
+cursor = conn.cursor()
+cursor.execute('''CREATE TABLE IF NOT EXISTS user (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL
+                  )''')
+conn.commit()
+conn.close()
+        "
+
+    - name: Run Tests and Generate Coverage Report
+      run: |
+        pytest --cov=./ --cov-report=xml
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      with:
+        args: >
+          -Dsonar.projectKey=YOUR_SONARCLOUD_PROJECT_KEY
+          -Dsonar.organization=YOUR_SONARCLOUD_ORG
+          -Dsonar.python.coverage.reportPaths=coverage.xml
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
